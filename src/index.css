@@ -88,34 +88,6 @@ section {
   @apply text-[10px] uppercase tracking-[0.2em] font-semibold opacity-60;
 }
 
-/* Custom Cursor */
-.custom-cursor {
-  width: 20px;
-  height: 20px;
-  background: white;
-  border-radius: 50%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-difference: difference;
-  transition: transform 0.1s ease-out;
-}
-
-.custom-cursor-dot {
-  width: 4px;
-  height: 4px;
-  background: white;
-  border-radius: 50%;
-  position: fixed;
-  top: 0;
-  left: 0;
-  pointer-events: none;
-  z-index: 9999;
-  mix-blend-difference: difference;
-}
-
 /* Horizontal Scroll */
 .no-scrollbar::-webkit-scrollbar {
   display: none;

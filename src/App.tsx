@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { motion } from 'motion/react';
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
@@ -22,7 +22,9 @@ const OptimizedImage = ({
   loading = "lazy", 
   width, 
   height, 
-  priority = false 
+  priority = false,
+  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  objectFit = "cover"
 }: { 
   src: string; 
   alt: string; 
@@ -31,27 +33,66 @@ const OptimizedImage = ({
   width?: string | number; 
   height?: string | number;
   priority?: boolean;
+  sizes?: string;
+  objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
 }) => {
-  const handleLoad = () => {
-    ScrollTrigger.refresh();
+  const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (e.currentTarget.complete && e.currentTarget.naturalWidth > 0) {
+      // Use requestAnimationFrame to ensure the browser has finished layout
+      // after the image load event, providing accurate dimensions for ScrollTrigger
+      requestAnimationFrame(() => {
+        ScrollTrigger.refresh();
+      });
+    }
+  }, []);
+
+  // Helper to generate optimized URLs with format and width
+  const getOptimizedUrl = (url: string, format?: string, w?: number) => {
+    const separator = url.includes('?') ? '&' : '?';
+    let newUrl = url;
+    
+    if (format) {
+      const formatParam = url.includes('unsplash.com') ? 'fm' : 'format';
+      newUrl += `${separator}${formatParam}=${format}`;
+    }
+    
+    if (w) {
+      const widthSeparator = newUrl.includes('?') ? '&' : '?';
+      const widthParam = url.includes('unsplash.com') ? 'w' : 'width';
+      newUrl += `${widthSeparator}${widthParam}=${w}`;
+    }
+    
+    return newUrl;
   };
 
   return (
     <picture>
-      {/* Fallback for next-gen formats if we had them */}
-      {/* <source srcSet={`${src}?format=avif`} type="image/avif" /> */}
-      {/* <source srcSet={`${src}?format=webp`} type="image/webp" /> */}
+      {/* AVIF Source - Optimized for quality/size ratio */}
+      <source 
+        type="image/avif"
+        srcSet={`${getOptimizedUrl(src, 'avif', 800)} 800w, ${getOptimizedUrl(src, 'avif', 1600)} 1600w`}
+        sizes={sizes}
+      />
+      {/* WebP Source - Optimized for compatibility/size ratio */}
+      <source 
+        type="image/webp"
+        srcSet={`${getOptimizedUrl(src, 'webp', 800)} 800w, ${getOptimizedUrl(src, 'webp', 1600)} 1600w`}
+        sizes={sizes}
+      />
+      {/* Fallback Image with JPEG srcset for high-res displays */}
       <img
         src={src}
+        srcSet={`${getOptimizedUrl(src, 'jpg', 1600)} 1600w, ${getOptimizedUrl(src, 'jpg', 2000)} 2000w`}
+        sizes={sizes}
         alt={alt}
         className={className}
         loading={priority ? "eager" : loading}
-        decoding="async"
+        decoding={priority ? "sync" : "async"}
         width={width}
         height={height}
         onLoad={handleLoad}
         referrerPolicy="no-referrer"
-        style={{ objectFit: 'cover' }}
+        style={{ objectFit }}
       />
     </picture>
   );
@@ -61,154 +102,154 @@ const PRODUCTS = [
   {
     id: 1,
     name: "Silk Draped Gown",
-    price: "$890",
+    price: "$40",
     category: "WOMEN",
     image: "https://iili.io/BHJTOXt.jpg"
   },
   {
     id: 2,
     name: "Tailored Urban Suit",
-    price: "$550",
+    price: "$25",
     category: "MEN",
     image: "https://iili.io/BHHRf8x.jpg"
   },
   {
     id: 3,
     name: "Modern Classic Blazer",
-    price: "$320",
+    price: "$25",
     category: "MEN",
     image: "https://iili.io/BHHR26u.jpg"
   },
   {
     id: 4,
     name: "Leather Chelsea Boots",
-    price: "$420",
+    price: "$90",
     category: "SHOES",
     image: "https://iili.io/BHdMiPf.jpg"
   },
   {
     id: 5,
     name: "Velvet Evening Clutch",
-    price: "$280",
+    price: "$50",
     category: "WOMEN",
     image: "https://iili.io/BHJTtEu.jpg"
   },
   {
     id: 6,
     name: "Contemporary Linen Set",
-    price: "$680",
+    price: "$50",
     category: "MEN",
     image: "https://iili.io/BHHRKaj.jpg"
   },
   {
     id: 7,
     name: "Satin Slip Dress",
-    price: "$450",
+    price: "$50",
     category: "WOMEN",
     image: "https://iili.io/BHJuzTN.jpg"
   },
   {
     id: 8,
     name: "Kids Cotton Set",
-    price: "$120",
+    price: "$20",
     category: "KIDS",
     image: "https://iili.io/BHdnRff.jpg"
   },
   {
     id: 9,
     name: "Classic Derby Shoes",
-    price: "$380",
+    price: "$20",
     category: "SHOES",
     image: "https://iili.io/BHdMZS2.jpg"
   },
   {
     id: 10,
     name: "Structured Overcoat",
-    price: "$750",
+    price: "$50",
     category: "MEN",
     image: "https://iili.io/BHHRF3b.jpg"
   },
   {
     id: 11,
     name: "Pleated Midi Skirt",
-    price: "$290",
+    price: "$30",
     category: "WOMEN",
     image: "https://iili.io/BHJuACX.jpg"
   },
   {
     id: 12,
     name: "Kids Denim Jacket",
-    price: "$150",
+    price: "$20",
     category: "KIDS",
     image: "https://iili.io/BHdngqJ.jpg"
   },
   {
     id: 13,
     name: "Artisanal Wool Jacket",
-    price: "$590",
+    price: "$25",
     category: "MEN",
     image: "https://iili.io/BHHRnwB.jpg"
   },
   {
     id: 14,
     name: "Signature Evening Suit",
-    price: "$920",
+    price: "$30",
     category: "MEN",
     image: "https://iili.io/BHHRoZP.jpg"
   },
   {
     id: 15,
     name: "Modernist Trench Coat",
-    price: "$840",
+    price: "$35",
     category: "MEN",
     image: "https://iili.io/BHHRzn1.jpg"
   },
   {
     id: 16,
     name: "Luxe Cashmere Blend",
-    price: "$480",
+    price: "$25",
     category: "MEN",
     image: "https://iili.io/BHHRIMF.jpg"
   },
   {
     id: 18,
     name: "Avant-Garde Ensemble",
-    price: "$1100",
+    price: "$35",
     category: "MEN",
     image: "https://iili.io/BHH5HRR.jpg"
   },
   {
     id: 19,
     name: "Heritage Pattern Suit",
-    price: "$980",
+    price: "$25",
     category: "MEN",
     image: "https://iili.io/BHH53xI.jpg"
   },
   {
     id: 20,
     name: "Bespoke Evening Wear",
-    price: "$1250",
+    price: "$25",
     category: "MEN",
     image: "https://iili.io/BHHRGPn.jpg"
   },
   {
     id: 21,
     name: "Royal Velvet Tuxedo",
-    price: "$1400",
+    price: "$50",
     category: "MEN",
     image: "https://iili.io/BHH5dDN.jpg"
   },
   {
     id: 22,
     name: "Kids Designer Ensemble",
-    price: "$180",
+    price: "$20",
     category: "KIDS",
     image: "https://iili.io/BHdn4gR.jpg"
   },
   {
     id: 23,
     name: "Kids Luxury Outerwear",
-    price: "$220",
+    price: "$20",
     category: "KIDS",
     image: "https://iili.io/BHdnr0v.jpg"
   },
@@ -267,8 +308,6 @@ export default function App() {
   const [view, setView] = useState('home');
   const [isLoading, setIsLoading] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const cursorRef = useRef<HTMLDivElement>(null);
-  const cursorDotRef = useRef<HTMLDivElement>(null);
   const horizontalRef = useRef<HTMLDivElement>(null);
   const horizontalSectionRef = useRef<HTMLDivElement>(null);
 
@@ -308,24 +347,6 @@ export default function App() {
 
   useGSAP(() => {
     if (view !== 'home') return;
-
-    // Custom Cursor Logic
-    const moveCursor = (e: MouseEvent) => {
-      gsap.to(cursorRef.current, {
-        x: e.clientX,
-        y: e.clientY,
-        duration: 0.5,
-        ease: "power3.out"
-      });
-      gsap.to(cursorDotRef.current, {
-        x: e.clientX,
-        y: e.clientY,
-        duration: 0.1,
-        ease: "power3.out"
-      });
-    };
-
-    window.addEventListener('mousemove', moveCursor);
 
     // Split Text Animations
     const splitElements = document.querySelectorAll('.split-text');
@@ -452,19 +473,6 @@ export default function App() {
       });
     });
 
-    // Cursor Hover Effects
-    const hoverables = document.querySelectorAll('a, button, .group');
-    hoverables.forEach((el) => {
-      el.addEventListener('mouseenter', () => {
-        gsap.to(cursorRef.current, { scale: 4, backgroundColor: 'white', mixBlendMode: 'difference' });
-        gsap.to(cursorDotRef.current, { opacity: 0 });
-      });
-      el.addEventListener('mouseleave', () => {
-        gsap.to(cursorRef.current, { scale: 1, backgroundColor: 'white', mixBlendMode: 'difference' });
-        gsap.to(cursorDotRef.current, { opacity: 1 });
-      });
-    });
-
     // Section Reveal Animations
     const sections = gsap.utils.toArray('section:not(.hero-section)');
     sections.forEach((section: any) => {
@@ -496,7 +504,6 @@ export default function App() {
     });
 
     return () => {
-      window.removeEventListener('mousemove', moveCursor);
       splitInstances.forEach(instance => instance.revert());
     };
   }, { scope: containerRef, dependencies: [view] });
@@ -510,6 +517,45 @@ export default function App() {
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       </div>
     </div>
+  );
+
+  const FusedButton = ({ product }: { product: any }) => (
+    <motion.a 
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
+      whileHover={{ y: -2, scale: 1.02 }}
+      whileTap={{ scale: 0.97 }}
+      href={`https://wa.me/263772663855?text=I'm interested in this product: ${product.name} ${product.image}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group/wa flex items-center w-full h-[56px] rounded-[50px] overflow-hidden transition-all duration-500 bg-black border border-[#d4af37] relative shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
+    >
+      {/* Shimmer Effect */}
+      <div className="absolute inset-0 w-[200%] -translate-x-full group-hover/wa:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-[#d4af37]/20 to-transparent pointer-events-none" />
+      
+      {/* Price Section */}
+      <div className="h-full px-6 flex items-center justify-center border-r border-[#d4af37]/30 bg-[#d4af37]/5 relative z-10">
+        <span className="text-[#d4af37] font-sans font-bold text-[14px] tracking-tight">
+          {product.price}
+        </span>
+      </div>
+
+      {/* Enquire Section */}
+      <div className="flex-grow h-full flex items-center justify-center gap-2 relative z-10 group-hover/wa:bg-[#d4af37]/10 transition-colors duration-500">
+        <motion.div
+          animate={{ y: [0, -2, 0] }}
+          transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+        >
+          <svg className="w-4 h-4 fill-[#d4af37] drop-shadow-md" viewBox="0 0 24 24">
+            <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.412 0 12.048c0 2.123.554 4.197 1.605 6.044L0 24l6.102-1.602a11.777 11.777 0 005.946 1.601h.005c6.634 0 12.044-5.413 12.048-12.05a11.751 11.751 0 00-3.489-8.492z"/></svg>
+        </motion.div>
+        <span className="text-[#d4af37] font-sans font-bold text-[13px] tracking-tighter">
+          ENQUIRE
+        </span>
+      </div>
+    </motion.a>
   );
 
   const CategoryView = ({ title, description, image }: { title: string, description: string, image: string }) => {
@@ -596,9 +642,9 @@ export default function App() {
               {isLoading ? (
                 Array.from({ length: 6 }).map((_, i) => <ProductSkeleton key={i} />)
               ) : (
-                filteredProducts.map((product) => (
+                filteredProducts.map((product, index) => (
                   <div key={product.id} className="group cursor-pointer mb-12 md:mb-0">
-                    <div className="reveal-img-container aspect-[3/4] overflow-hidden mb-8 bg-gray-100 rounded-[2rem] border border-black/5 shadow-sm">
+                    <div className="reveal-img-container aspect-[3/4] overflow-hidden mb-6 bg-gray-100 rounded-[2rem] border border-black/5 shadow-sm">
                       <OptimizedImage 
                         src={product.image} 
                         alt={product.name} 
@@ -608,34 +654,13 @@ export default function App() {
                       />
                     </div>
                     
-                    <motion.a 
-                      initial={{ opacity: 0, y: 20 }}
-                      whileInView={{ opacity: 1, y: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-                      whileHover={{ y: -2, scale: 1.02 }}
-                      whileTap={{ scale: 0.97 }}
-                      href={`https://wa.me/263772663855?text=I'm interested in this product: ${product.name} ${product.image}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group/wa flex items-center justify-center w-full h-[56px] rounded-[50px] overflow-hidden transition-all duration-500 bg-black border border-[#d4af37] relative gap-2 group-hover/wa:bg-[#d4af37]/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-                    >
-                      {/* Shimmer Effect */}
-                      <div className="absolute inset-0 w-[200%] -translate-x-full group-hover/wa:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-[#d4af37]/20 to-transparent pointer-events-none" />
-                      
-                      <motion.div
-                        animate={{ y: [0, -2, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                        className="relative z-10"
-                      >
-                        <svg className="w-5 h-5 fill-[#d4af37] drop-shadow-md" viewBox="0 0 24 24">
-                          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.412 0 12.048c0 2.123.554 4.197 1.605 6.044L0 24l6.102-1.602a11.777 11.777 0 005.946 1.601h.005c6.634 0 12.044-5.413 12.048-12.05a11.751 11.751 0 00-3.489-8.492z"/></svg>
-                      </motion.div>
-                      
-                      <span className="text-[#d4af37] font-sans font-bold text-[13px] tracking-tighter relative z-10">
-                        ENQUIRE
+                    <div className="flex flex-col mb-6 px-2">
+                      <span className="micro-label text-[#d4af37] font-bold mb-1">
+                        {String(index + 1).padStart(2, '0')}
                       </span>
-                    </motion.a>
+                    </div>
+                    
+                    <FusedButton product={product} />
                   </div>
                 ))
               )}
@@ -671,10 +696,6 @@ export default function App() {
 
   return (
     <div ref={containerRef} className="min-h-screen font-sans bg-black text-[#1a1a1a] selection:bg-black selection:text-white">
-      {/* Custom Cursor */}
-      <div ref={cursorRef} className="custom-cursor hidden md:block" />
-      <div ref={cursorDotRef} className="custom-cursor-dot hidden md:block" />
-
       {/* Header Overlay */}
       <header className="absolute top-0 left-0 w-full z-[100] bg-transparent p-6 md:p-12 flex justify-between items-start pointer-events-none">
         {/* Menu Button */}
@@ -694,9 +715,10 @@ export default function App() {
             <OptimizedImage 
               src="https://i.postimg.cc/QxCZqjBJ/Screenshot-2026-03-27-130301.png" 
               alt="Splash Attire" 
-              className="w-10 h-10 object-contain"
+              className="w-10 h-10"
               width="40"
               height="40"
+              objectFit="contain"
             />
           </div>
           <span className="text-[10px] font-serif italic text-white tracking-[0.3em] uppercase opacity-60 group-hover:opacity-100 transition-opacity">Splash Attire</span>
@@ -744,6 +766,7 @@ export default function App() {
             width="2000"
             height="1125"
             priority={true}
+            sizes="100vw"
           />
           {/* Subtle Scrim */}
           <div className="absolute inset-0 bg-black/20" />
@@ -871,7 +894,7 @@ export default function App() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
-            {PRODUCTS.slice(0, 4).map((product) => (
+            {PRODUCTS.slice(0, 4).map((product, index) => (
               <div key={product.id} className="group cursor-pointer">
                 <div className="reveal-img-container aspect-[3/4] mb-8 rounded-[2rem] overflow-hidden border border-black/5 shadow-sm">
                   <OptimizedImage 
@@ -884,34 +907,12 @@ export default function App() {
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 transition-colors duration-500" />
                 </div>
                 <div className="flex flex-col gap-6">
-                  <motion.a 
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1] }}
-                    whileHover={{ y: -2, scale: 1.02 }}
-                    whileTap={{ scale: 0.97 }}
-                    href={`https://wa.me/263772663855?text=I'm interested in this product: ${product.name} ${product.image}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group/wa flex items-center justify-center w-full h-[56px] rounded-[50px] overflow-hidden transition-all duration-500 bg-black border border-[#d4af37] relative gap-2 group-hover/wa:bg-[#d4af37]/10 shadow-[0_8px_32px_rgba(0,0,0,0.4)]"
-                  >
-                    {/* Shimmer Effect */}
-                    <div className="absolute inset-0 w-[200%] -translate-x-full group-hover/wa:translate-x-full transition-transform duration-1000 ease-in-out bg-gradient-to-r from-transparent via-[#d4af37]/20 to-transparent pointer-events-none" />
-                    
-                    <motion.div
-                      animate={{ y: [0, -2, 0] }}
-                      transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                      className="relative z-10"
-                    >
-                      <svg className="w-5 h-5 fill-[#d4af37] drop-shadow-md" viewBox="0 0 24 24">
-                        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.414 0 .004 5.412 0 12.048c0 2.123.554 4.197 1.605 6.044L0 24l6.102-1.602a11.777 11.777 0 005.946 1.601h.005c6.634 0 12.044-5.413 12.048-12.05a11.751 11.751 0 00-3.489-8.492z"/></svg>
-                    </motion.div>
-                    
-                    <span className="text-[#d4af37] font-sans font-bold text-[13px] tracking-tighter relative z-10">
-                      ENQUIRE
+                  <div className="flex flex-col px-2">
+                    <span className="micro-label text-[#d4af37] font-bold mb-1">
+                      {String(index + 1).padStart(2, '0')}
                     </span>
-                  </motion.a>
+                  </div>
+                  <FusedButton product={product} />
                 </div>
               </div>
             ))}
@@ -970,9 +971,10 @@ export default function App() {
                 <OptimizedImage 
                   src="https://i.postimg.cc/QxCZqjBJ/Screenshot-2026-03-27-130301.png" 
                   alt="Splash Attire" 
-                  className="w-14 h-14 md:w-18 md:h-18 object-contain transition-all duration-1000 group-hover:scale-105 relative z-10"
+                  className="w-14 h-14 md:w-18 md:h-18 transition-all duration-1000 group-hover:scale-105 relative z-10"
                   width="80"
                   height="80"
+                  objectFit="contain"
                 />
                 <div className="absolute inset-0 bg-gradient-to-tr from-black/5 via-transparent to-white/20 pointer-events-none" />
               </div>
