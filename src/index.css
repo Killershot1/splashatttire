@@ -46,6 +46,15 @@ section {
   transform: translateZ(0);
 }
 
+.hero-image, .reveal-img, .horizontal-item img, .category-hero-img {
+  will-change: transform, opacity;
+  object-fit: cover;
+}
+
+.split-text span {
+  will-change: transform, opacity;
+}
+
 /* 
   PERFORMANCE NOTE: 
   - Avoid 'background-attachment: fixed' as it causes heavy repaints.

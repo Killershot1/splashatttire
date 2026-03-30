@@ -14,6 +14,49 @@ import { ShoppingBag, Menu, Search, ArrowRight, ArrowLeft, Instagram, Twitter, F
 
 gsap.registerPlugin(ScrollTrigger);
 
+// Performance Optimized Image Component
+const OptimizedImage = ({ 
+  src, 
+  alt, 
+  className = "", 
+  loading = "lazy", 
+  width, 
+  height, 
+  priority = false 
+}: { 
+  src: string; 
+  alt: string; 
+  className?: string; 
+  loading?: "lazy" | "eager"; 
+  width?: string | number; 
+  height?: string | number;
+  priority?: boolean;
+}) => {
+  const handleLoad = () => {
+    ScrollTrigger.refresh();
+  };
+
+  return (
+    <picture>
+      {/* Fallback for next-gen formats if we had them */}
+      {/* <source srcSet={`${src}?format=avif`} type="image/avif" /> */}
+      {/* <source srcSet={`${src}?format=webp`} type="image/webp" /> */}
+      <img
+        src={src}
+        alt={alt}
+        className={className}
+        loading={priority ? "eager" : loading}
+        decoding="async"
+        width={width}
+        height={height}
+        onLoad={handleLoad}
+        referrerPolicy="no-referrer"
+        style={{ objectFit: 'cover' }}
+      />
+    </picture>
+  );
+};
+
 const PRODUCTS = [
   {
     id: 1,
@@ -499,15 +542,13 @@ export default function App() {
               </p>
             </div>
             <div className="order-1 lg:order-2 aspect-[4/5] overflow-hidden rounded-[2rem] md:rounded-[3rem] shadow-2xl border border-black/5">
-              <img 
+              <OptimizedImage 
                 src={image} 
                 alt={title} 
-                className="w-full h-full object-cover" 
-                referrerPolicy="no-referrer" 
-                loading="lazy" 
-                decoding="async"
+                className="w-full h-full category-hero-img" 
                 width="1200"
                 height="1600"
+                priority={true}
               />
             </div>
           </div>
@@ -558,13 +599,10 @@ export default function App() {
                 filteredProducts.map((product) => (
                   <div key={product.id} className="group cursor-pointer mb-12 md:mb-0">
                     <div className="reveal-img-container aspect-[3/4] overflow-hidden mb-8 bg-gray-100 rounded-[2rem] border border-black/5 shadow-sm">
-                      <img 
+                      <OptimizedImage 
                         src={product.image} 
                         alt={product.name} 
-                        className="reveal-img w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-                        referrerPolicy="no-referrer" 
-                        loading="lazy" 
-                        decoding="async"
+                        className="reveal-img w-full h-full transition-transform duration-700 group-hover:scale-110" 
                         width="800"
                         height="1067"
                       />
@@ -653,11 +691,12 @@ export default function App() {
           className="pointer-events-auto flex flex-col items-end gap-2 group"
         >
           <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-xl overflow-hidden transition-transform group-hover:scale-105">
-            <img 
+            <OptimizedImage 
               src="https://i.postimg.cc/QxCZqjBJ/Screenshot-2026-03-27-130301.png" 
               alt="Splash Attire" 
               className="w-10 h-10 object-contain"
-              referrerPolicy="no-referrer"
+              width="40"
+              height="40"
             />
           </div>
           <span className="text-[10px] font-serif italic text-white tracking-[0.3em] uppercase opacity-60 group-hover:opacity-100 transition-opacity">Splash Attire</span>
@@ -681,6 +720,16 @@ export default function App() {
             >
               Shop All
             </button>
+
+            <button 
+              onClick={() => setIsMenuOpen(false)}
+              className="group flex items-center gap-4 mt-12 text-[#d4af37] hover:text-white transition-colors"
+            >
+              <div className="w-12 h-12 rounded-full border border-[#d4af37]/30 flex items-center justify-center group-hover:border-white transition-all">
+                <ArrowLeft className="w-6 h-6" />
+              </div>
+              <span className="text-2xl font-serif italic">Back</span>
+            </button>
           </div>
         </div>
       </header>
@@ -688,13 +737,13 @@ export default function App() {
       {/* Hero Section */}
       <section className="hero-section relative w-full h-screen flex items-center justify-center overflow-hidden m-0 p-0">
         <div className="hero-image-container absolute inset-0 z-0 w-full h-full">
-          <img 
+          <OptimizedImage 
             src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000" 
             alt="Hero" 
-            className="hero-image w-full h-full object-cover object-center"
-            referrerPolicy="no-referrer"
-            loading="eager"
-            decoding="async"
+            className="hero-image w-full h-full"
+            width="2000"
+            height="1125"
+            priority={true}
           />
           {/* Subtle Scrim */}
           <div className="absolute inset-0 bg-black/20" />
@@ -706,14 +755,6 @@ export default function App() {
             <span className="hero-title-text text-white">Splash</span>
             <span className="hero-title-text italic -mt-[2vw] md:-mt-[1vw] text-white">Attire</span>
           </h2>
-          <div className="hero-cta mt-12 md:mt-16">
-            <button 
-              onClick={() => setView('women')}
-              className="magnetic group border border-white/40 px-10 md:px-12 py-4 md:py-5 rounded-full bg-white/10 backdrop-blur-sm hover:bg-white hover:text-black transition-all duration-700"
-            >
-              <span className="micro-label text-inherit">View Lookbook</span>
-            </button>
-          </div>
         </div>
 
         {/* Scroll Indicator */}
@@ -785,13 +826,10 @@ export default function App() {
                 onClick={() => setView(item.title.toLowerCase())}
               >
                 <div className="relative h-[60vh] md:h-[70vh] lg:h-[75vh] aspect-[3/4] mx-auto lg:mx-0 rounded-[2.5rem] overflow-hidden border border-white/5 transition-all duration-700 group-hover:border-[#d4af37]/50 group-hover:shadow-[0_0_50px_rgba(212,175,55,0.1)]">
-                  <img 
+                  <OptimizedImage 
                     src={item.image} 
                     alt={item.title} 
-                    className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110"
-                    referrerPolicy="no-referrer"
-                    loading="lazy"
-                    decoding="async"
+                    className="w-full h-full transition-transform duration-1000 group-hover:scale-110"
                     width="1200"
                     height="1600"
                   />
@@ -822,69 +860,6 @@ export default function App() {
         </div>
       </section>
 
-      {/* Special Promo / Combo Section */}
-      <section className="py-40 px-6 md:px-12 bg-white text-black border-t border-black/5 relative overflow-hidden will-change-transform [transform:translateZ(0)]">
-        {/* Decorative elements */}
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-[#fdfcf8] -z-10" />
-        <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl" />
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-24 items-center">
-            {/* Left Side: Editorial Image */}
-            <div className="lg:col-span-7 relative group">
-              <div className="reveal-img-container aspect-[4/5] rounded-[3rem] overflow-hidden shadow-2xl">
-                <img 
-                  src="https://iili.io/BHJuACX.jpg" 
-                  alt="Special Promo" 
-                  className="reveal-img w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                  referrerPolicy="no-referrer"
-                />
-              </div>
-              
-              {/* Floating Badge */}
-              <div className="absolute -top-10 -right-10 w-40 h-40 bg-black rounded-full flex flex-col items-center justify-center text-white shadow-2xl rotate-12 group-hover:rotate-0 transition-transform duration-500">
-                <span className="text-[10px] uppercase tracking-widest mb-1 opacity-60">Special</span>
-                <span className="text-2xl font-serif italic">Selection</span>
-              </div>
-            </div>
-
-            {/* Right Side: Content */}
-            <div className="lg:col-span-5">
-              <div className="flex flex-col gap-6">
-                <p className="micro-label text-[#d4af37] font-bold">Limited Edition</p>
-                <h3 className="editorial-title text-5xl md:text-7xl lg:text-[6vw] mb-4">The Golden <span className="italic">Hour</span> Set</h3>
-                <p className="text-xl text-black/60 leading-relaxed mb-8">
-                  Experience the ultimate expression of luxury with our curated seasonal selection. A perfect harmony of silk and structure, designed for those who command the room.
-                </p>
-                
-                <div className="space-y-6 mb-12">
-                  <div className="flex items-center gap-8 p-6 bg-[#fdfcf8] rounded-2xl border border-black/5 hover:border-[#d4af37]/30 transition-all group/item cursor-pointer">
-                    <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0">
-                      <img src={PRODUCTS[0].image} alt={PRODUCTS[0].name} className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110" referrerPolicy="no-referrer" />
-                    </div>
-                    <div className="flex flex-col">
-                      <p className="split-text text-xl md:text-2xl text-black/60 font-serif italic">"Elegance is the only beauty that never fades."</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-8 p-6 bg-[#fdfcf8] rounded-2xl border border-black/5 hover:border-[#d4af37]/30 transition-all group/item cursor-pointer">
-                    <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0">
-                      <img src={PRODUCTS[1].image} alt={PRODUCTS[1].name} className="w-full h-full object-cover transition-transform duration-500 group-hover/item:scale-110" referrerPolicy="no-referrer" />
-                    </div>
-                    <div className="flex flex-col">
-                      <p className="split-text text-xl md:text-2xl text-black/60 font-serif italic">"Style is a way to say who you are without having to speak."</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-8 border-t border-black/5">
-                  <p className="micro-label text-black/40 italic">A curated selection of our most exceptional pieces.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Product Grid - Now "The Full Collection" */}
       <section className="py-40 px-6 md:px-12 bg-[#fdfcf8] text-black border-t border-black/5 gold-swirl-bg will-change-transform [transform:translateZ(0)]">
         <div className="max-w-7xl mx-auto relative z-10">
@@ -899,13 +874,10 @@ export default function App() {
             {PRODUCTS.slice(0, 4).map((product) => (
               <div key={product.id} className="group cursor-pointer">
                 <div className="reveal-img-container aspect-[3/4] mb-8 rounded-[2rem] overflow-hidden border border-black/5 shadow-sm">
-                  <img 
+                  <OptimizedImage 
                     src={product.image} 
                     alt={product.name}
-                    className="reveal-img w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                    loading="lazy"
-                    decoding="async"
+                    className="reveal-img w-full h-full"
                     width="800"
                     height="1067"
                   />
@@ -995,13 +967,10 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 md:gap-32 mb-32">
             <div className="flex flex-col gap-12">
               <div className="magnetic w-20 h-20 md:w-24 md:h-24 bg-[#FDFDFD] rounded-[1.8rem] md:rounded-[2.2rem] flex items-center justify-center shadow-[0_15px_40px_rgba(0,0,0,0.4),inset_0_0_20px_rgba(255,255,255,0.5)] border border-white/10 overflow-hidden group hover:border-[#d4af37]/30 transition-all duration-1000 ease-out hover:shadow-[0_25px_60px_rgba(0,0,0,0.5),0_0_30px_rgba(212,175,55,0.1)] relative">
-                <img 
+                <OptimizedImage 
                   src="https://i.postimg.cc/QxCZqjBJ/Screenshot-2026-03-27-130301.png" 
                   alt="Splash Attire" 
                   className="w-14 h-14 md:w-18 md:h-18 object-contain transition-all duration-1000 group-hover:scale-105 relative z-10"
-                  referrerPolicy="no-referrer"
-                  loading="lazy"
-                  decoding="async"
                   width="80"
                   height="80"
                 />
