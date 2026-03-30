@@ -1,16 +1,132 @@
+<!-- 
+  IMAGE CHECKLIST BEFORE GOING LIVE:
+  ✅ Compress ALL images at squoosh.app (target: under 80KB each)
+  ✅ Convert ALL images to WebP format
+  ✅ Hero image must be under 150KB
+  ✅ No image should exceed 1200px wide
+  ✅ Test speed at pagespeed.web.dev after uploading
+-->
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="max-age=31536000">
     <title>Splash Attire | Sustainable High Fashion</title>
-    <link rel="preload" as="image" 
-      imagesrcset="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000&fm=avif&w=800 800w, https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000&fm=avif&w=1600 1600w" 
-      imagesizes="100vw" />
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000&fm=webp" type="image/webp">
+    <link rel="preload" as="image" href="https://i.postimg.cc/QxCZqjBJ/Screenshot-2026-03-27-130301.png" type="image/png">
+    <link rel="preload" as="image" href="https://iili.io/BHJTOXt.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHRf8x.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHR26u.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdMiPf.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHJTtEu.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHRKaj.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHJuzTN.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdnRff.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdMZS2.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHRF3b.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHJuACX.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdngqJ.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHRnwB.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHRoZP.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHRzn1.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHRIMF.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHH5HRR.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHH53xI.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHHRGPn.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHH5dDN.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdn4gR.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdnr0v.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdMQcl.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdMPMG.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdWf1f.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHdVPb1.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://iili.io/BHJudhP.jpg" type="image/jpeg">
+    <link rel="preload" as="image" href="https://i.postimg.cc/0ytgjrZf/stylish-african-american-man-urban-600nw-2645618061.webp" type="image/webp">
+    <link rel="preload" as="image" href="https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200" type="image/jpeg">
+    <style>
+      #preloader {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: #ffffff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        transition: opacity 0.5s ease;
+      }
+      #preloader.hidden {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .spinner {
+        width: 50px; height: 50px;
+        border: 5px solid #eee;
+        border-top-color: #333;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 20px;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
+    <div id="preloader">
+      <div class="spinner"></div>
+      <p style="font-family: serif; font-style: italic; color: #333;">Loading Splash Attire...</p>
+    </div>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      const imageUrls = [
+        'https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000&fm=webp',
+        'https://i.postimg.cc/QxCZqjBJ/Screenshot-2026-03-27-130301.png',
+        'https://iili.io/BHJTOXt.jpg',
+        'https://iili.io/BHHRf8x.jpg',
+        'https://iili.io/BHHR26u.jpg',
+        'https://iili.io/BHdMiPf.jpg',
+        'https://iili.io/BHJTtEu.jpg',
+        'https://iili.io/BHHRKaj.jpg',
+        'https://iili.io/BHJuzTN.jpg',
+        'https://iili.io/BHdnRff.jpg',
+        'https://iili.io/BHdMZS2.jpg',
+        'https://iili.io/BHHRF3b.jpg',
+        'https://iili.io/BHJuACX.jpg',
+        'https://iili.io/BHdngqJ.jpg',
+        'https://iili.io/BHHRnwB.jpg',
+        'https://iili.io/BHHRoZP.jpg',
+        'https://iili.io/BHHRzn1.jpg',
+        'https://iili.io/BHHRIMF.jpg',
+        'https://iili.io/BHH5HRR.jpg',
+        'https://iili.io/BHH53xI.jpg',
+        'https://iili.io/BHHRGPn.jpg',
+        'https://iili.io/BHH5dDN.jpg',
+        'https://iili.io/BHdn4gR.jpg',
+        'https://iili.io/BHdnr0v.jpg',
+        'https://iili.io/BHdMQcl.jpg',
+        'https://iili.io/BHdMPMG.jpg',
+        'https://iili.io/BHdWf1f.jpg',
+        'https://iili.io/BHdVPb1.jpg',
+        'https://iili.io/BHJudhP.jpg',
+        'https://i.postimg.cc/0ytgjrZf/stylish-african-american-man-urban-600nw-2645618061.webp',
+        'https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=1200'
+      ];
+
+      window.addEventListener('load', () => {
+        imageUrls.forEach(src => {
+          const img = new Image();
+          img.src = src;
+        });
+        
+        const preloader = document.getElementById('preloader');
+        preloader.classList.add('hidden');
+        setTimeout(() => preloader.remove(), 600);
+      });
+    </script>
   </body>
 </html>
 

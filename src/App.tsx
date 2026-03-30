@@ -15,38 +15,24 @@ import { ShoppingBag, Menu, Search, ArrowRight, ArrowLeft, Instagram, Twitter, F
 gsap.registerPlugin(ScrollTrigger);
 
 // Performance Optimized Image Component
+// REMINDER: Compress all images at squoosh.app before uploading to maintain fast load times
 const OptimizedImage = ({ 
   src, 
   alt, 
   className = "", 
-  loading = "lazy", 
   width, 
   height, 
-  priority = false,
-  sizes = "(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw",
+  sizes = "(max-width: 480px) 400px, (max-width: 900px) 800px, 1200px",
   objectFit = "cover"
 }: { 
   src: string; 
   alt: string; 
   className?: string; 
-  loading?: "lazy" | "eager"; 
-  width?: string | number; 
-  height?: string | number;
-  priority?: boolean;
+  width: string | number; 
+  height: string | number;
   sizes?: string;
   objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
 }) => {
-  const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    if (e.currentTarget.complete && e.currentTarget.naturalWidth > 0) {
-      // Use requestAnimationFrame to ensure the browser has finished layout
-      // after the image load event, providing accurate dimensions for ScrollTrigger
-      requestAnimationFrame(() => {
-        ScrollTrigger.refresh();
-      });
-    }
-  }, []);
-
-  // Helper to generate optimized URLs with format and width
   const getOptimizedUrl = (url: string, format?: string, w?: number) => {
     const separator = url.includes('?') ? '&' : '?';
     let newUrl = url;
@@ -67,30 +53,22 @@ const OptimizedImage = ({
 
   return (
     <picture>
-      {/* AVIF Source - Optimized for quality/size ratio */}
-      <source 
-        type="image/avif"
-        srcSet={`${getOptimizedUrl(src, 'avif', 800)} 800w, ${getOptimizedUrl(src, 'avif', 1600)} 1600w`}
-        sizes={sizes}
-      />
-      {/* WebP Source - Optimized for compatibility/size ratio */}
       <source 
         type="image/webp"
-        srcSet={`${getOptimizedUrl(src, 'webp', 800)} 800w, ${getOptimizedUrl(src, 'webp', 1600)} 1600w`}
+        srcSet={`${getOptimizedUrl(src, 'webp', 400)} 400w, ${getOptimizedUrl(src, 'webp', 800)} 800w, ${getOptimizedUrl(src, 'webp', 1200)} 1200w`}
         sizes={sizes}
       />
-      {/* Fallback Image with JPEG srcset for high-res displays */}
       <img
-        src={src}
-        srcSet={`${getOptimizedUrl(src, 'jpg', 1600)} 1600w, ${getOptimizedUrl(src, 'jpg', 2000)} 2000w`}
+        src={getOptimizedUrl(src, 'jpg', 800)}
+        srcSet={`${getOptimizedUrl(src, 'jpg', 400)} 400w, ${getOptimizedUrl(src, 'jpg', 800)} 800w, ${getOptimizedUrl(src, 'jpg', 1200)} 1200w`}
         sizes={sizes}
         alt={alt}
-        className={className}
-        loading={priority ? "eager" : loading}
-        decoding={priority ? "sync" : "async"}
+        className={`${className} loaded`}
+        loading="eager"
+        decoding="sync"
+        fetchPriority="high"
         width={width}
         height={height}
-        onLoad={handleLoad}
         referrerPolicy="no-referrer"
         style={{ objectFit }}
       />
@@ -356,7 +334,7 @@ export default function App() {
       const split = new SplitType(el as HTMLElement, { types: 'chars,words' });
       splitInstances.push(split);
       
-      if (split.chars) {
+      if (split.chars && split.chars.length > 0) {
         gsap.from(split.chars, {
           y: 50,
           opacity: 0,
@@ -373,21 +351,25 @@ export default function App() {
     });
 
     // Hero Reveal
-    const heroSplit = new SplitType('.hero-title-text', { types: 'chars' });
-    splitInstances.push(heroSplit);
+    const heroTitle = document.querySelector('.hero-title-text');
+    const heroSplit = heroTitle ? new SplitType('.hero-title-text', { types: 'chars' }) : null;
+    if (heroSplit) splitInstances.push(heroSplit);
 
     const tl = gsap.timeline();
     
     // Initial states for a smoother reveal without the "black bar" effect
-    gsap.set(".hero-image", { scale: 1.1 });
+    const heroImage = document.querySelector(".hero-image");
+    if (heroImage) {
+      gsap.set(".hero-image", { scale: 1.1 });
 
-    tl.to(".hero-image", {
-      scale: 1,
-      duration: 2.5,
-      ease: "power2.out"
-    });
+      tl.to(".hero-image", {
+        scale: 1,
+        duration: 2.5,
+        ease: "power2.out"
+      });
+    }
 
-    if (heroSplit.chars) {
+    if (heroSplit && heroSplit.chars && heroSplit.chars.length > 0) {
       tl.from(heroSplit.chars, {
         y: 50,
         opacity: 0,
@@ -397,27 +379,22 @@ export default function App() {
       }, "-=1.5");
     }
     
-    tl.from(".hero-cta", {
-      y: 20,
-      opacity: 0,
-      duration: 1,
-      ease: "power3.out"
-    }, "-=1");
-
     // Horizontal Scroll - Restored GSAP pinning
     if (horizontalRef.current && horizontalSectionRef.current) {
       const items = gsap.utils.toArray(".horizontal-item");
-      gsap.to(items, {
-        xPercent: -100 * (items.length - 1),
-        ease: "none",
-        scrollTrigger: {
-          trigger: horizontalSectionRef.current,
-          pin: true,
-          scrub: 1,
-          snap: 1 / (items.length - 1),
-          end: () => "+=" + horizontalRef.current?.offsetWidth
-        }
-      });
+      if (items.length > 0) {
+        gsap.to(items, {
+          xPercent: -100 * (items.length - 1),
+          ease: "none",
+          scrollTrigger: {
+            trigger: horizontalSectionRef.current,
+            pin: true,
+            scrub: 1,
+            snap: 1 / (items.length - 1),
+            end: () => "+=" + horizontalRef.current?.offsetWidth
+          }
+        });
+      }
     }
 
     // Image Reveal on Scroll
@@ -435,18 +412,20 @@ export default function App() {
           }
         }
       );
-      gsap.fromTo(img, 
-        { scale: 1.4 },
-        { 
-          scale: 1,
-          duration: 2,
-          ease: "power4.out",
-          scrollTrigger: {
-            trigger: container,
-            start: "top 80%",
+      if (img) {
+        gsap.fromTo(img, 
+          { scale: 1.4 },
+          { 
+            scale: 1,
+            duration: 2,
+            ease: "power4.out",
+            scrollTrigger: {
+              trigger: container,
+              start: "top 80%",
+            }
           }
-        }
-      );
+        );
+      }
     });
 
     // Magnetic Buttons
@@ -490,17 +469,32 @@ export default function App() {
     });
 
     // Parallax Effect for Images
-    gsap.utils.toArray('.reveal-img').forEach((img: any) => {
-      gsap.to(img, {
-        yPercent: 15,
-        ease: "none",
-        scrollTrigger: {
-          trigger: img,
-          start: "top bottom",
-          end: "bottom top",
-          scrub: true
+    const parallaxImages = gsap.utils.toArray('.reveal-img');
+    if (parallaxImages.length > 0) {
+      parallaxImages.forEach((img: any) => {
+        if (img) {
+          gsap.to(img, {
+            yPercent: 15,
+            ease: "none",
+            scrollTrigger: {
+              trigger: img,
+              start: "top bottom",
+              end: "bottom top",
+              scrub: true
+            }
+          });
         }
       });
+    }
+
+    // Global Image Load Handler for Blur Placeholder
+    const images = document.querySelectorAll('img');
+    images.forEach(img => {
+      if (img.complete) {
+        img.classList.add('loaded');
+      } else {
+        img.addEventListener('load', () => img.classList.add('loaded'));
+      }
     });
 
     return () => {
@@ -582,19 +576,18 @@ export default function App() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 md:gap-20 items-center mb-20 md:mb-32">
             <div className="order-2 lg:order-1">
               <p className="micro-label mb-4 md:mb-6 text-[#d4af37] font-bold">Collection</p>
-              <h2 className="editorial-title text-6xl md:text-8xl lg:text-[10vw] mb-6 md:mb-8 leading-tight">{title}</h2>
+              <h2 className="editorial-title font-serif font-bold text-6xl md:text-8xl lg:text-[10vw] mb-6 md:mb-8 leading-tight">{title}</h2>
               <p className="text-lg md:text-xl text-black/60 max-w-md leading-relaxed">
                 {description}
               </p>
             </div>
-            <div className="order-1 lg:order-2 aspect-[4/5] overflow-hidden rounded-[2rem] md:rounded-[3rem] shadow-2xl border border-black/5">
+            <div className="order-1 lg:order-2 aspect-[4/5] overflow-hidden rounded-[2rem] md:rounded-[3rem] shadow-2xl border border-black/5 image-wrapper">
               <OptimizedImage 
                 src={image} 
                 alt={title} 
                 className="w-full h-full category-hero-img" 
                 width="1200"
                 height="1600"
-                priority={true}
               />
             </div>
           </div>
@@ -644,7 +637,7 @@ export default function App() {
               ) : (
                 filteredProducts.map((product, index) => (
                   <div key={product.id} className="group cursor-pointer mb-12 md:mb-0">
-                    <div className="reveal-img-container aspect-[3/4] overflow-hidden mb-6 bg-gray-100 rounded-[2rem] border border-black/5 shadow-sm">
+                    <div className="reveal-img-container aspect-[3/4] overflow-hidden mb-6 bg-gray-100 rounded-[2rem] border border-black/5 shadow-sm image-wrapper">
                       <OptimizedImage 
                         src={product.image} 
                         alt={product.name} 
@@ -758,14 +751,13 @@ export default function App() {
 
       {/* Hero Section */}
       <section className="hero-section relative w-full h-screen flex items-center justify-center overflow-hidden m-0 p-0">
-        <div className="hero-image-container absolute inset-0 z-0 w-full h-full">
+        <div className="hero-image-container absolute inset-0 z-0 w-full h-full image-wrapper-hero">
           <OptimizedImage 
             src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?auto=format&fit=crop&q=80&w=2000" 
             alt="Hero" 
             className="hero-image w-full h-full"
             width="2000"
             height="1125"
-            priority={true}
             sizes="100vw"
           />
           {/* Subtle Scrim */}
@@ -774,7 +766,7 @@ export default function App() {
 
         <div className="relative z-10 w-full h-full flex flex-col items-center justify-center text-center px-6">
           <p className="micro-label mb-6 md:mb-8 tracking-[0.4em] text-white/90 text-[10px] md:text-xs uppercase">High Fashion • Sustainable • Timeless</p>
-          <h2 className="hero-title editorial-title text-[18vw] md:text-[12vw] leading-[0.8] flex flex-col items-center justify-center">
+          <h2 className="hero-title editorial-title font-serif font-bold text-[18vw] md:text-[12vw] leading-[0.8] flex flex-col items-center justify-center">
             <span className="hero-title-text text-white">Splash</span>
             <span className="hero-title-text italic -mt-[2vw] md:-mt-[1vw] text-white">Attire</span>
           </h2>
@@ -817,7 +809,10 @@ export default function App() {
         <div className="absolute inset-0 opacity-[0.02] pointer-events-none" 
           style={{ 
             backgroundImage: `url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 86c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm66-3c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zm-46-45c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm58 41c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM32 5c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm54 23c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zM9 51c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1zm58 40c.552 0 1-.448 1-1s-.448-1-1-1-1 .448-1 1 .448 1 1 1z' fill='%23d4af37' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-            backgroundSize: '200px 200px'
+            backgroundSize: 'cover',
+            backgroundRepeat: 'no-repeat',
+            contentVisibility: 'auto',
+            containIntrinsicSize: '500px'
           }} 
         />
         
@@ -848,7 +843,7 @@ export default function App() {
                 className="horizontal-card w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center group cursor-pointer"
                 onClick={() => setView(item.title.toLowerCase())}
               >
-                <div className="relative h-[60vh] md:h-[70vh] lg:h-[75vh] aspect-[3/4] mx-auto lg:mx-0 rounded-[2.5rem] overflow-hidden border border-white/5 transition-all duration-700 group-hover:border-[#d4af37]/50 group-hover:shadow-[0_0_50px_rgba(212,175,55,0.1)]">
+                <div className="relative h-[60vh] md:h-[70vh] lg:h-[75vh] aspect-[3/4] mx-auto lg:mx-0 rounded-[2.5rem] overflow-hidden border border-white/5 transition-all duration-700 group-hover:border-[#d4af37]/50 group-hover:shadow-[0_0_50px_rgba(212,175,55,0.1)] image-wrapper">
                   <OptimizedImage 
                     src={item.image} 
                     alt={item.title} 
@@ -896,7 +891,7 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-12 gap-y-24">
             {PRODUCTS.slice(0, 4).map((product, index) => (
               <div key={product.id} className="group cursor-pointer">
-                <div className="reveal-img-container aspect-[3/4] mb-8 rounded-[2rem] overflow-hidden border border-black/5 shadow-sm">
+                <div className="reveal-img-container aspect-[3/4] mb-8 rounded-[2rem] overflow-hidden border border-black/5 shadow-sm image-wrapper">
                   <OptimizedImage 
                     src={product.image} 
                     alt={product.name}
